@@ -8,9 +8,7 @@ A FastAPI-based REST API for managing music playlists with song ratings and sear
 - **Song Search** - Search songs by exact title matching
 - **Rating System** - 5-star rating system (0.0-5.0) for songs
 - **Pagination** - Paginated song listings
-- **FastAPI** - Modern, fast web framework with automatic API docs
 - **SQLite** - Simple, embedded database
-- **Comprehensive Tests** - 39 unit tests with 86% code coverage
 - **Smart Data Loading** - Preserves ratings on restarts, reloads when JSON updated
 
 ## Requirements Satisfied
