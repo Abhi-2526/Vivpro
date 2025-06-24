@@ -116,21 +116,7 @@ python -m pytest test_minimal.py -v
 
 ```
 
-## 🧪 Test Coverage
-
-Comprehensive test suite with **39 tests** covering:
-
-- **Data Normalization** (4 tests) - JSON processing with edge cases
-- **Database Operations** (6 tests) - Smart reload logic and initialization  
-- **Data Loading** (5 tests) - File loading with rating preservation
-- **Pydantic Models** (3 tests) - Data validation and types
-- **API Endpoints** (13 tests) - All REST endpoints with error cases
-- **Edge Cases** (5 tests) - Error handling and special characters
-- **Integration** (2 tests) - Full workflow testing
-
-**Coverage: 86%** - Thoroughly tested core functionality
-
-## 🔄 Smart Data Management
+## Smart Data Management
 
 The API intelligently manages data loading:
 
