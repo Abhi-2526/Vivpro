@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 ### Run the API
 ```bash
-python minimal_api.py
+python api.py
 ```
 
 The API will start on `http://localhost:8000` and automatically:
