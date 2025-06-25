@@ -4,11 +4,10 @@ import os
 import sqlite3
 import tempfile
 import time
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from api import (
     app, normalize_json, init_db, load_data, should_reload_data,
-    Song, Rating
 )
 
 client = TestClient(app)
@@ -396,7 +395,7 @@ class TestAPIEndpoints:
     """Test REST API endpoints"""
     
     def test_get_all_songs_default(self):
-        """Test 1.2.1: Get all songs with default pagination"""
+        """Get all songs with default pagination"""
         response = client.get("/songs")
         assert response.status_code == 200
         data = response.json()
@@ -441,7 +440,7 @@ class TestAPIEndpoints:
         assert response.status_code == 422
         
     def test_rate_song_valid(self):
-        """Test 1.2.3: Rate a song with valid rating"""
+        """Rate a song with valid rating"""
         response = client.put("/songs/test_id/rating", json={"rating": 4.5})
         # May be 404 if song doesn't exist, but endpoint accepts valid rating
         assert response.status_code in [200, 404]
@@ -456,7 +455,7 @@ class TestAPIEndpoints:
         response = client.put("/songs/test_id/rating", json={"rating": 6.0})
         assert response.status_code == 400
         data = response.json()
-        assert "must be between 0.0 and 5.0" in data["detail"]
+        assert "Rating must be between 0 and 5" in data["detail"]
         
     def test_rate_song_invalid_rating_low(self):
         """Rate a song with negative rating"""
