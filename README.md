@@ -23,7 +23,7 @@ A FastAPI-based REST API for managing music playlists with song ratings and sear
 
 ### Install Dependencies
 ```bash
-pip install -r minimal_requirements.txt
+pip install -r requirements.txt
 ```
 
 ### Run the API
@@ -32,7 +32,7 @@ python minimal_api.py
 ```
 
 The API will start on `http://localhost:8000` and automatically:
-1. Create SQLite database (`minimal.db`)
+1. Create SQLite database (`database.db`)
 2. Load songs from `playlist.json` if available
 3. Preserve existing ratings on restart
 
@@ -112,7 +112,7 @@ Visit `http://localhost:8000/docs` for interactive API documentation with built-
 ### Running Unit Tests
 ```bash
 # Run all tests
-python -m pytest test_minimal.py -v
+python -m pytest tests.py -v
 
 ```
 
@@ -149,7 +149,7 @@ pytest-cov==6.1.1
 ## Configuration
 
 ### Environment
-- **Database**: `minimal.db` (SQLite, auto-created)
+- **Database**: `database.db` (SQLite, auto-created)
 - **Port**: 8000 (avoids macOS Control Center conflict on 5000)
 - **Host**: 0.0.0.0 (accessible from network)
 

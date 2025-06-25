@@ -7,6 +7,7 @@ import os
 from typing import List, Dict, Any, Optional
 from config import config
 
+
 class Song(BaseModel):
     index: int
     id: str
@@ -29,8 +30,10 @@ class Song(BaseModel):
     class_label: Optional[int] = None
     star_rating: float = 0.0
 
+
 class Rating(BaseModel):
     rating: float
+
 
 def should_reload_data(json_file: str = None, db_file: str = None) -> bool:
     """
@@ -54,13 +57,13 @@ def should_reload_data(json_file: str = None, db_file: str = None) -> bool:
         json_file = config.DEFAULT_JSON_FILE
     if db_file is None:
         db_file = config.DATABASE_URL
-        
+
     if not os.path.exists(json_file):
         return False
-    
+
     if not os.path.exists(db_file):
         return True
-    
+
     try:
         conn = sqlite3.connect(db_file)
         cursor = conn.execute('SELECT COUNT(*) FROM songs')
@@ -70,11 +73,12 @@ def should_reload_data(json_file: str = None, db_file: str = None) -> bool:
             return True
     except:
         return True
-    
+
     json_mtime = os.path.getmtime(json_file)
     db_mtime = os.path.getmtime(db_file)
-    
+
     return json_mtime > db_mtime
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -97,7 +101,7 @@ async def lifespan(app: FastAPI):
         3. Either reload data from JSON or use existing database
     """
     init_db()
-    
+
     if should_reload_data():
         try:
             song_count = load_data(config.DEFAULT_JSON_FILE)
@@ -113,10 +117,12 @@ async def lifespan(app: FastAPI):
             print(f"Using existing database with {count} songs")
         except:
             print("Database exists but couldn't read song count")
-    
+
     yield
 
+
 app = FastAPI(title=config.API_TITLE, version=config.API_VERSION, lifespan=lifespan)
+
 
 def init_db():
     """
@@ -154,6 +160,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 def normalize_json(json_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Convert attribute-map JSON format to normalized table format.
@@ -183,10 +190,10 @@ def normalize_json(json_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]
     """
     if not json_data:
         return []
-    
+
     first_attr = list(json_data.keys())[0]
     song_count = len(json_data[first_attr])
-    
+
     songs = []
     for i in range(song_count):
         song = {"index": i}
@@ -195,8 +202,9 @@ def normalize_json(json_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]
         if "star_rating" not in song:
             song["star_rating"] = 0.0
         songs.append(song)
-    
+
     return songs
+
 
 def load_data(file_path: str, preserve_ratings: bool = True):
     """
@@ -230,11 +238,11 @@ def load_data(file_path: str, preserve_ratings: bool = True):
     """
     with open(file_path, 'r') as f:
         json_data = json.load(f)
-    
+
     songs = normalize_json(json_data)
-    
+
     conn = sqlite3.connect(config.DATABASE_URL)
-    
+
     existing_ratings = {}
     if preserve_ratings:
         try:
@@ -246,12 +254,12 @@ def load_data(file_path: str, preserve_ratings: bool = True):
             pass
     else:
         print("Resetting all ratings to 0.0")
-    
+
     conn.execute('DELETE FROM songs')
-    
+
     for song in songs:
         preserved_rating = existing_ratings.get(song.get('id'), 0.0) if preserve_ratings else 0.0
-        
+
         # Use proper SQL parameter binding to avoid SQL injection and quote issues
         conn.execute('''
             INSERT INTO songs (idx, id, title, danceability, energy, key, loudness, mode, 
@@ -281,10 +289,11 @@ def load_data(file_path: str, preserve_ratings: bool = True):
             song.get('class_label'),
             preserved_rating
         ))
-    
+
     conn.commit()
     conn.close()
     return len(songs)
+
 
 # API Endpoints
 
@@ -309,20 +318,21 @@ def get_all_songs(page: int = Query(1, ge=1), limit: int = Query(20, ge=1, le=10
         - Returns empty list if page is beyond available data
     """
     offset = (page - 1) * limit
-    
+
     conn = sqlite3.connect(config.DATABASE_URL)
     conn.row_factory = sqlite3.Row
     cursor = conn.execute(f'SELECT * FROM songs ORDER BY idx LIMIT {limit} OFFSET {offset}')
     rows = cursor.fetchall()
     conn.close()
-    
+
     songs = []
     for row in rows:
         song = dict(row)
         song['index'] = song.pop('idx')
         songs.append(song)
-    
+
     return songs
+
 
 @app.get("/songs/search", response_model=List[Song])
 def search_by_title(title: str):
@@ -348,14 +358,15 @@ def search_by_title(title: str):
     cursor = conn.execute("SELECT * FROM songs WHERE title = ?", (title,))
     rows = cursor.fetchall()
     conn.close()
-    
+
     songs = []
     for row in rows:
         song = dict(row)
-        song['index'] = song.pop('idx')  
+        song['index'] = song.pop('idx')
         songs.append(song)
-    
+
     return songs
+
 
 @app.put("/songs/{song_id}/rating")
 def rate_song(song_id: str, rating: Rating):
@@ -383,18 +394,19 @@ def rate_song(song_id: str, rating: Rating):
     """
     if not 0 <= rating.rating <= 5:
         raise HTTPException(status_code=400, detail=f"Rating must be between 0 and 5")
-    
+
     conn = sqlite3.connect(config.DATABASE_URL)
     cursor = conn.execute("UPDATE songs SET star_rating = ? WHERE id = ?", (rating.rating, song_id))
-    
+
     if cursor.rowcount == 0:
         conn.close()
         raise HTTPException(status_code=404, detail="Song not found")
-    
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Rating updated", "song_id": song_id, "rating": rating.rating}
+
 
 @app.post("/load")
 def load_json_data(file_path: str = None):
@@ -422,7 +434,7 @@ def load_json_data(file_path: str = None):
     """
     if file_path is None:
         file_path = config.DEFAULT_JSON_FILE
-        
+
     try:
         songs_loaded = load_data(file_path, preserve_ratings=False)
         return {"message": f"Loaded {songs_loaded} songs"}
@@ -430,7 +442,7 @@ def load_json_data(file_path: str = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=config.API_HOST, port=config.API_PORT) 
+
+    uvicorn.run(app, host=config.API_HOST, port=config.API_PORT)
