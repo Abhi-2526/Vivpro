@@ -236,10 +236,23 @@ def load_data(file_path: str, preserve_ratings: bool = True):
         - Always deletes all existing songs before inserting new data
         - Preserves user ratings by song ID when preserve_ratings=True
     """
-    with open(file_path, 'r') as f:
-        json_data = json.load(f)
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"JSON file not found: {file_path}")
+    
+    if os.path.getsize(file_path) == 0:
+        raise ValueError(f"JSON file is empty: {file_path}")
+    
+    try:
+        with open(file_path, 'r') as f:
+            json_data = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in {file_path}: {e}")
 
     songs = normalize_json(json_data)
+
+    if not songs:
+        raise ValueError(f"No valid songs found in {file_path}")
 
     conn = sqlite3.connect(config.DATABASE_URL)
 
@@ -260,7 +273,6 @@ def load_data(file_path: str, preserve_ratings: bool = True):
     for song in songs:
         preserved_rating = existing_ratings.get(song.get('id'), 0.0) if preserve_ratings else 0.0
 
-        # Use proper SQL parameter binding to avoid SQL injection and quote issues
         conn.execute('''
             INSERT INTO songs (idx, id, title, danceability, energy, key, loudness, mode, 
                              acousticness, instrumentalness, liveness, valence, tempo, 
